@@ -5,11 +5,20 @@
 // ============================================================
 require_once __DIR__ . '/config/session.php';
 
+$isApp = is_mobile_app();
+
 if (is_admin_logged_in()) {
     redirect(APP_BASE . '/admin/dashboard.php');
 } elseif (is_patient_logged_in()) {
+    if (!$isApp) {
+        patient_logout();
+        redirect(APP_BASE . '/login.php');
+    }
     redirect(APP_BASE . '/patient/dashboard.php');
 }
+
+// Redirect directly to login.php (which handles platform-specific login forms)
+redirect(APP_BASE . '/login.php');
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -9,6 +9,47 @@ $admin_name     = $_SESSION['admin_name']     ?? 'Admin';
 $admin_role     = $_SESSION['admin_role']     ?? 'nurse';
 $admin_initials = $_SESSION['admin_initials'] ?? 'AD';
 
+$adminId = $_SESSION['admin_id'] ?? 0;
+$appLoginToken = '';
+$qrImagePath = '';
+
+if ($adminId) {
+    if (!function_exists('getDB')) {
+        require_once __DIR__ . '/../config/db.php';
+    }
+    $db = getDB();
+    
+    // Fetch or generate mobile app login token for QR code authentication
+    $stmt = $db->prepare("SELECT app_login_token FROM admins WHERE id = :id LIMIT 1");
+    $stmt->execute([':id' => $adminId]);
+    $appLoginToken = $stmt->fetchColumn();
+    
+    if (empty($appLoginToken)) {
+        $appLoginToken = bin2hex(random_bytes(32));
+        $db->prepare("UPDATE admins SET app_login_token = :token WHERE id = :id")
+           ->execute([':token' => $appLoginToken, ':id' => $adminId]);
+    }
+    
+    // Generate QR code using the built-in phpqrcode library
+    $qrLibPath = __DIR__ . '/../assets/libs/phpqrcode/qrlib.php';
+    if (file_exists($qrLibPath)) {
+        require_once $qrLibPath;
+        $tmpDir = sys_get_temp_dir();
+        $qrFile = $tmpDir . '/staff_login_' . $adminId . '.png';
+        
+        $qrPayload = json_encode([
+            'type'  => 'staff_login',
+            'token' => $appLoginToken
+        ]);
+        
+        QRcode::png($qrPayload, $qrFile, QR_ECLEVEL_H, 6, 2);
+        if (file_exists($qrFile)) {
+            $qrImagePath = 'data:image/png;base64,' . base64_encode(file_get_contents($qrFile));
+        }
+    }
+}
+
+
 if (!isset($notif_count)) {
     if (!function_exists('getDB')) {
         require_once __DIR__ . '/../config/db.php';
@@ -135,6 +176,11 @@ $nav_items = [
           <a href="<?= APP_BASE ?>/admin/dashboard.php" class="notif-dropdown__footer">View all on Dashboard</a>
         </div>
       </div>
+      <!-- App Access Trigger -->
+      <button class="btn btn-surface btn-sm btn-pill" onclick="openModal('modal-app-login')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;margin-right:8px;font-size:12px;font-weight:600;" title="Link Mobile App">
+        <span class="material-symbols-outlined" style="font-size:16px;">phone_iphone</span>
+        <span>App Access</span>
+      </button>
       <div style="width:1px;height:28px;background:var(--outline-variant)"></div>
       <span class="topbar-page-title"><?= htmlspecialchars($page_title) ?></span>
     </div>
@@ -142,3 +188,31 @@ $nav_items = [
 
   <!-- Content Canvas -->
   <div class="admin-content">
+
+<!-- Modal for Mobile App QR Access -->
+<div class="modal-overlay" id="modal-app-login" style="z-index: 10000;">
+  <div class="modal-box" style="max-width: 400px; text-align: center; border-radius: var(--radius-xl); padding: var(--space-xl);">
+    <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+      <h3 style="font-size:18px;font-weight:700">Mobile App Staff Access</h3>
+      <button onclick="closeModal('modal-app-login')" style="background:none;border:none;cursor:pointer;color:var(--on-surface-variant)">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body" style="padding: var(--space-lg) 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-md);">
+      <p style="font-size:14px; color: var(--on-surface-variant); line-height: 1.5; margin: 0;">
+        Scan this QR code using the <strong>RabiesShield Daet</strong> mobile app to log in as staff instantly.
+      </p>
+      <?php if ($qrImagePath): ?>
+        <img src="<?= $qrImagePath ?>" alt="App Login QR" style="border: 1px solid var(--outline-variant); border-radius: 16px; padding: 12px; background: white; width: 180px; height: 180px; box-shadow: var(--shadow-card);" />
+      <?php else: ?>
+        <p style="color: var(--error)">Failed to generate QR Code. Check library files.</p>
+      <?php endif; ?>
+      <div style="font-size: 12px; color: var(--on-surface-variant); background: var(--surface-container); padding: 8px 12px; border-radius: var(--radius-md); width: 100%; word-break: break-all;">
+        Access Token: <span style="font-family: monospace; font-weight: 600;"><?= htmlspecialchars($appLoginToken) ?></span>
+      </div>
+    </div>
+    <div class="modal-footer" style="border-top: none; padding-top: 0;">
+      <button type="button" onclick="closeModal('modal-app-login')" class="btn btn-surface" style="width: 100%; justify-content: center;">Close</button>
+    </div>
+  </div>
+</div>

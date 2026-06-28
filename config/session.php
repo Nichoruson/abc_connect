@@ -7,6 +7,24 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/**
+ * Detects if the request is originated from the mobile app (Capacitor wrapper)
+ */
+function is_mobile_app(): bool {
+    if (isset($_GET['platform']) && $_GET['platform'] === 'app') {
+        $_SESSION['is_app'] = true;
+        return true;
+    }
+    if (isset($_SESSION['is_app']) && $_SESSION['is_app'] === true) {
+        return true;
+    }
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'com.rabiesshield.daet') {
+        $_SESSION['is_app'] = true;
+        return true;
+    }
+    return false;
+}
+
 // Load APP_BASE if not already defined (e.g. when session.php is first include)
 if (!defined('APP_BASE')) {
     require_once __DIR__ . '/db.php';

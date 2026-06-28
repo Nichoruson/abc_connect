@@ -7,6 +7,45 @@ require_once __DIR__ . '/config/session.php';
 
 if (is_patient_logged_in()) redirect(APP_BASE . '/patient/dashboard.php');
 
+if (!is_mobile_app()) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Access Restricted | RabiesShield Daet</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com"/>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+      <link rel="stylesheet" href="<?= APP_BASE ?>/assets/css/global.css"/>
+      <style>
+        body { margin: 0; min-height: 100vh; background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%); display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
+        .restrict-card { background: white; border: 1.5px solid var(--outline-variant); border-radius: var(--radius-xl); padding: var(--space-xl); max-width: 440px; width: 100%; text-align: center; box-shadow: var(--shadow-card); margin: var(--space-md); }
+        .restrict-icon { width: 64px; height: 64px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg); }
+        .restrict-icon .material-symbols-outlined { color: var(--error); font-size: 32px; }
+      </style>
+    </head>
+    <body>
+      <div class="restrict-card">
+        <div class="restrict-icon">
+          <span class="material-symbols-outlined">block</span>
+        </div>
+        <h2 style="font-weight: 800; color: var(--on-surface); margin-bottom: var(--space-sm);">Mobile Registration Only</h2>
+        <p style="color: var(--on-surface-variant); font-size: 15px; line-height: 1.6; margin-bottom: var(--space-lg);">
+          For security purposes, patient registration is strictly restricted to the official <strong>RabiesShield Daet</strong> mobile application.
+        </p>
+        <div style="background: var(--surface-container); border-radius: var(--radius-lg); padding: var(--space-md); font-size: 13px; color: var(--on-surface-variant); line-height: 1.5; margin-bottom: var(--space-lg);">
+          Please open or download our mobile app on your Android or iOS device to complete your registration.
+        </div>
+        <a href="<?= APP_BASE ?>/login.php" class="btn btn-surface btn-full" style="justify-content: center; text-decoration: none;">Go to Sign In</a>
+      </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 $errors  = [];
 $success = '';
 

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS admins (
     full_name VARCHAR(100) NOT NULL,
     role ENUM('admin', 'doctor', 'nurse') DEFAULT 'nurse',
     avatar_initials VARCHAR(4),
+    app_login_token VARCHAR(64) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
