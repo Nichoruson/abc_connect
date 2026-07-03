@@ -11,6 +11,10 @@ if (session_status() === PHP_SESSION_NONE) {
  * Detects if the request is originated from the mobile app (Capacitor wrapper)
  */
 function is_mobile_app(): bool {
+    if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'RabiesShieldApp') !== false) {
+        $_SESSION['is_app'] = true;
+        return true;
+    }
     if (isset($_GET['platform']) && $_GET['platform'] === 'app') {
         $_SESSION['is_app'] = true;
         return true;
