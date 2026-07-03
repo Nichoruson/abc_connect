@@ -141,14 +141,18 @@ function getTableColumnsList($db, string $table): array {
     }
 }
 
-// Perform Migration
+// Perform Migration and Admin Actions
+$action_log = '';
 if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
-    $migrationExecuted = true;
+    $action = $_POST['action'] ?? 'migrate';
     
-    // Disable FK checks to safely alter/create tables
-    $db->exec("SET FOREIGN_KEY_CHECKS = 0");
-    
-    foreach ($expected_tables as $table => $createSql) {
+    if ($action === 'migrate' || isset($_GET['auto'])) {
+        $migrationExecuted = true;
+        
+        // Disable FK checks to safely alter/create tables
+        $db->exec("SET FOREIGN_KEY_CHECKS = 0");
+        
+        foreach ($expected_tables as $table => $createSql) {
         // 1. Check if table exists
         $tableExists = false;
         try {
@@ -312,10 +316,55 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
                 }
             }
         }
+        
+        // Re-enable FK checks
+        $db->exec("SET FOREIGN_KEY_CHECKS = 1");
+    } elseif ($action === 'reset_password') {
+        $userId = (int)($_POST['user_id'] ?? 0);
+        if ($userId > 0) {
+            try {
+                $hash = password_hash('password', PASSWORD_BCRYPT);
+                $stmt = $db->prepare("UPDATE users SET password_hash = :h WHERE id = :id");
+                $stmt->execute([':h' => $hash, ':id' => $userId]);
+                $action_log = "Successfully reset password for user ID $userId to 'password'!";
+            } catch (Exception $e) {
+                $action_log = "Error resetting password: " . $e->getMessage();
+            }
+        }
+    } elseif ($action === 'create_user') {
+        $name = trim($_POST['full_name'] ?? '');
+        $contact = trim($_POST['contact'] ?? '');
+        $password = $_POST['password'] ?? 'password';
+        if ($name && $contact) {
+            try {
+                $hash = password_hash($password, PASSWORD_BCRYPT);
+                $stmt = $db->prepare("INSERT INTO users (full_name, contact_number, password_hash) VALUES (:n, :c, :h)");
+                $stmt->execute([':n' => $name, ':c' => $contact, ':h' => $hash]);
+                $new_id = $db->lastInsertId();
+                
+                // Create patient profile
+                $code = 'P-' . rand(1000, 9999);
+                $stmt2 = $db->prepare("INSERT INTO patients (user_id, patient_code, animal_type, animal_ownership, bite_date, body_location, category) VALUES (:uid, :code, 'Dog', 'Pet', :date, 'Arm', 'II')");
+                $stmt2->execute([':uid' => $new_id, ':code' => $code, ':date' => date('Y-m-d')]);
+                
+                $action_log = "Created user '$name' ($contact) with password '$password' and patient code '$code'!";
+            } catch (Exception $e) {
+                $action_log = "Error creating user: " . $e->getMessage();
+            }
+        } else {
+            $action_log = "Name and contact number are required!";
+        }
     }
-    
-    // Re-enable FK checks
-    $db->exec("SET FOREIGN_KEY_CHECKS = 1");
+}
+
+// Fetch users
+$users = [];
+if ($db) {
+    try {
+        $users = $db->query("SELECT id, full_name, contact_number FROM users ORDER BY id DESC LIMIT 15")->fetchAll();
+    } catch (Exception $e) {
+        // Table users might not exist or be mismatching
+    }
 }
 
 // Run basic dry-run status checks to present in UI
@@ -716,6 +765,72 @@ if ($db) {
       </div>
     <?php endif; ?>
 
+  <?php endif; ?>
+
+  <?php if ($db && !empty($users)): ?>
+    <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+      <h2 style="font-family: 'Outfit', sans-serif; font-size: 20px; margin-bottom: 16px; color: #fff; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--primary);">group</span>
+        Registered Patients / Users
+      </h2>
+      
+      <?php if ($action_log): ?>
+        <div style="background: rgba(0, 245, 212, 0.08); border: 1px solid var(--primary); border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 14px; color: var(--primary);">
+          <?= htmlspecialchars($action_log) ?>
+        </div>
+      <?php endif; ?>
+
+      <div style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
+              <th style="padding: 12px 16px; color: var(--text-muted);">Name</th>
+              <th style="padding: 12px 16px; color: var(--text-muted);">Contact Number</th>
+              <th style="padding: 12px 16px; text-align: right; color: var(--text-muted);">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($users as $u): ?>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+                <td style="padding: 12px 16px; font-weight: 600; color: #fff;"><?= htmlspecialchars($u['full_name']) ?></td>
+                <td style="padding: 12px 16px; font-family: monospace;"><?= htmlspecialchars($u['contact_number'] ?: 'N/A') ?></td>
+                <td style="padding: 12px 16px; text-align: right;">
+                  <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="reset_password">
+                    <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                    <button type="submit" class="btn" style="padding: 6px 12px; font-size: 12px; display: inline-flex; width: auto; font-family: inherit; margin: 0; box-shadow: none;">
+                      Reset Password
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; margin-bottom: 12px; color: #fff;">Create Test Patient Account</h3>
+      <form method="POST" style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+        <input type="hidden" name="action" value="create_user">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Full Name</label>
+            <input type="text" name="full_name" placeholder="John Doe" required style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Contact Number</label>
+            <input type="text" name="contact" placeholder="09123456789" required style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Password</label>
+            <input type="text" name="password" value="password" required style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
+          </div>
+        </div>
+        <button type="submit" class="btn" style="width: auto; align-self: flex-start; padding: 10px 20px; font-size: 14px;">
+          Create User Account
+        </button>
+      </form>
+    </div>
   <?php endif; ?>
 
   <div class="action-links">
