@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
- * Detects if the request is originated from the mobile app (Capacitor wrapper)
+ * Detects if the request is originated from the mobile app (Capacitor wrapper or mobile device)
  */
 function is_mobile_app(): bool {
     if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'RabiesShieldApp') !== false) {
@@ -26,6 +26,31 @@ function is_mobile_app(): bool {
         $_SESSION['is_app'] = true;
         return true;
     }
+    
+    // Check for Capacitor origin/referer headers (Android/iOS WebView)
+    if (isset($_SERVER['HTTP_ORIGIN']) && (
+        strpos($_SERVER['HTTP_ORIGIN'], 'capacitor://') !== false ||
+        preg_match('/^https?:\/\/localhost(:\d+)?$/', $_SERVER['HTTP_ORIGIN'])
+    )) {
+        $_SESSION['is_app'] = true;
+        return true;
+    }
+    if (isset($_SERVER['HTTP_REFERER']) && (
+        strpos($_SERVER['HTTP_REFERER'], 'capacitor://') !== false ||
+        preg_match('/^https?:\/\/localhost(:\d+)?/', $_SERVER['HTTP_REFERER'])
+    )) {
+        $_SESSION['is_app'] = true;
+        return true;
+    }
+
+    // Check for mobile user agents
+    if (isset($_SERVER['HTTP_USER_AGENT'])) {
+        $ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+        if (preg_match('/(android|iphone|ipad|ipod|mobile|touch|opera mobi)/i', $ua)) {
+            return true;
+        }
+    }
+    
     return false;
 }
 
@@ -70,6 +95,16 @@ function require_admin_login(): void {
         header('Location: ' . APP_BASE . '/admin/login.php');
         exit;
     }
+
+    // If the staff member logged in via the mobile app's QR code scanner,
+    // restrict them strictly to the QR entry scanner page.
+    if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true) {
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        if (strpos($scriptName, 'logout.php') === false && strpos($scriptName, 'scan.php') === false) {
+            header('Location: ' . APP_BASE . '/admin/scan.php');
+            exit;
+        }
+    }
 }
 
 function admin_login(int $adminId, string $fullName, string $role, string $initials): void {
@@ -80,7 +115,7 @@ function admin_login(int $adminId, string $fullName, string $role, string $initi
 }
 
 function admin_logout(): void {
-    unset($_SESSION['admin_id'], $_SESSION['admin_name'], $_SESSION['admin_role'], $_SESSION['admin_initials']);
+    unset($_SESSION['admin_id'], $_SESSION['admin_name'], $_SESSION['admin_role'], $_SESSION['admin_initials'], $_SESSION['staff_logged_via_qr']);
 }
 
 // ---- Utilities ----

@@ -44,6 +44,30 @@ function getDB(): PDO {
         ];
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            
+            // Auto-initialize tables if 'admins' table doesn't exist
+            $check = $pdo->query("SHOW TABLES LIKE 'admins'");
+            if ($check->rowCount() === 0) {
+                $schemaFile = __DIR__ . '/../database/abc_connect_db.sql';
+                if (file_exists($schemaFile)) {
+                    $sql = file_get_contents($schemaFile);
+                    
+                    // Remove CREATE DATABASE and USE statements
+                    $sql = preg_replace('/CREATE DATABASE[^;]+;/i', '', $sql);
+                    $sql = preg_replace('/USE [^;]+;/i', '', $sql);
+                    
+                    // Execute the queries one by one
+                    $queries = explode(';', $sql);
+                    foreach ($queries as $q) {
+                        $q = trim($q);
+                        if (empty($q)) continue;
+                        if (preg_match('/^\s*(CREATE\s+DATABASE|USE)\b/i', $q)) {
+                            continue;
+                        }
+                        $pdo->exec($q);
+                    }
+                }
+            }
         } catch (PDOException $e) {
             die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
         }

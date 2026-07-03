@@ -66,16 +66,22 @@ if (!isset($notif_items)) {
     $notif_items = getDB()->query("SELECT * FROM notifications WHERE is_read=0 ORDER BY created_at DESC LIMIT 8")->fetchAll();
 }
 
-$nav_items = [
-  ['key' => 'dashboard', 'icon' => 'dashboard',       'label' => 'Dashboard',   'href' => APP_BASE . '/admin/dashboard.php'],
-  ['key' => 'queue',     'icon' => 'swap_vert',        'label' => 'Queue',       'href' => APP_BASE . '/admin/queue.php'],
-  ['key' => 'daily_cap', 'icon' => 'event_available',  'label' => 'Daily Cap',   'href' => APP_BASE . '/admin/daily_cap.php'],
-  ['key' => 'scanner',   'icon' => 'qr_code_scanner',  'label' => 'QR Scanner',  'href' => APP_BASE . '/admin/scan.php'],
-  ['key' => 'patients',  'icon' => 'personal_injury',  'label' => 'Patients',    'href' => APP_BASE . '/admin/patients.php'],
-  ['key' => 'inventory', 'icon' => 'inventory_2',      'label' => 'Inventory',   'href' => APP_BASE . '/admin/inventory.php'],
-  ['key' => 'reports',   'icon' => 'assessment',       'label' => 'Reports',     'href' => APP_BASE . '/admin/reports.php'],
-  ['key' => 'reminders', 'icon' => 'sms',             'label' => 'SMS Reminders', 'href' => APP_BASE . '/admin/sms_reminders.php'],
-];
+if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true) {
+    $nav_items = [
+      ['key' => 'scanner',   'icon' => 'qr_code_scanner',  'label' => 'QR Scanner',  'href' => APP_BASE . '/admin/scan.php'],
+    ];
+} else {
+    $nav_items = [
+      ['key' => 'dashboard', 'icon' => 'dashboard',       'label' => 'Dashboard',   'href' => APP_BASE . '/admin/dashboard.php'],
+      ['key' => 'queue',     'icon' => 'swap_vert',        'label' => 'Queue',       'href' => APP_BASE . '/admin/queue.php'],
+      ['key' => 'daily_cap', 'icon' => 'event_available',  'label' => 'Daily Cap',   'href' => APP_BASE . '/admin/daily_cap.php'],
+      ['key' => 'scanner',   'icon' => 'qr_code_scanner',  'label' => 'QR Scanner',  'href' => APP_BASE . '/admin/scan.php'],
+      ['key' => 'patients',  'icon' => 'personal_injury',  'label' => 'Patients',    'href' => APP_BASE . '/admin/patients.php'],
+      ['key' => 'inventory', 'icon' => 'inventory_2',      'label' => 'Inventory',   'href' => APP_BASE . '/admin/inventory.php'],
+      ['key' => 'reports',   'icon' => 'assessment',       'label' => 'Reports',     'href' => APP_BASE . '/admin/reports.php'],
+      ['key' => 'reminders', 'icon' => 'sms',             'label' => 'SMS Reminders', 'href' => APP_BASE . '/admin/sms_reminders.php'],
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -132,11 +138,16 @@ $nav_items = [
 
   <!-- Top Bar -->
   <header class="admin-topbar">
+    <?php if (!(isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true)): ?>
     <div class="topbar-search">
       <span class="material-symbols-outlined" style="color:var(--on-surface-variant);font-size:20px">search</span>
       <input type="text" id="global-search" placeholder="Search patients, vaccines..." autocomplete="off"/>
     </div>
+    <?php else: ?>
+    <div></div>
+    <?php endif; ?>
     <div class="topbar-actions">
+      <?php if (!(isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true)): ?>
       <div class="topbar-notif-wrap">
         <button class="topbar-notif" id="notif-btn" title="Notifications" aria-expanded="false" aria-controls="notif-dropdown">
           <span class="material-symbols-outlined">notifications</span>
@@ -182,6 +193,7 @@ $nav_items = [
         <span>App Access</span>
       </button>
       <div style="width:1px;height:28px;background:var(--outline-variant)"></div>
+      <?php endif; ?>
       <span class="topbar-page-title"><?= htmlspecialchars($page_title) ?></span>
     </div>
   </header>

@@ -38,6 +38,9 @@ try {
             $avatarInitials
         );
 
+        // Mark session as logged via QR code (from mobile app)
+        $_SESSION['staff_logged_via_qr'] = true;
+
         // Optional: Regenerate session ID for security
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
@@ -47,7 +50,7 @@ try {
         json_response([
             'success'  => true,
             'message'  => 'Staff authenticated successfully!',
-            'redirect' => APP_BASE . '/admin/dashboard.php'
+            'redirect' => APP_BASE . '/admin/scan.php'
         ]);
     } else {
         json_response([
