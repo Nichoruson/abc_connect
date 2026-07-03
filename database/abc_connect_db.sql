@@ -3,8 +3,8 @@
 -- Animal Bite Center Management System
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS abc_connect_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE abc_connect_db;
+-- CREATE DATABASE IF NOT EXISTS abc_connect_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE abc_connect_db;
 
 -- ============================================================
 -- ADMINS
