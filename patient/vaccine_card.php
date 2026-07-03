@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // RabiesShield Daet — Patient: Digital Vaccination Card
 // Permanent QR ID card with full medical record
@@ -50,7 +50,7 @@ $doses = $doses->fetchAll();
 
 // QR payload for the card identity
 $cardPayload = json_encode([
-    'sys'   => 'rabiesshield_daet',
+    'sys'   => 'abc_connect',
     'type'  => 'vaccination_card',
     'code'  => $patient['patient_code'],
     'uid'   => $userId,
@@ -138,12 +138,10 @@ include __DIR__ . '/../includes/header_patient.php';
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);position:relative;z-index:1">
       <div style="display:flex;align-items:center;gap:var(--space-sm)">
-        <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center">
-          <span class="material-symbols-outlined icon-filled" style="font-size:22px">pets</span>
-        </div>
+        <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width:38px;height:38px;object-fit:contain;border-radius:10px;background:white;padding:2px;"/>
         <div>
-          <div style="font-weight:800;font-size:14px">RabiesShield Daet</div>
-          <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em">DAET ABTC</div>
+          <div style="font-weight:800;font-size:14px">ABC Connect</div>
+          <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em">Animal Bite Center</div>
         </div>
       </div>
       <!-- QR Code -->

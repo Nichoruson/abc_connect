@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // RabiesShield Daet — Patient: My Entry Pass (QR Code)
 // Generates a QR-coded digital entry pass for an appointment
@@ -31,7 +31,7 @@ if (!$appt) {
 
 // Build QR payload — compact but verifiable
 $qrPayload = json_encode([
-    'sys'   => 'rabiesshield_daet',
+    'sys'   => 'abc_connect',
     'appt'  => $appt['id'],
     'token' => $appt['qr_token'],
     'code'  => $appt['patient_code'],
@@ -143,12 +143,10 @@ include __DIR__ . '/../includes/header_patient.php';
   <div class="pass-card animate-fade-in stagger-2">
     <!-- Header -->
     <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md);position:relative;z-index:1">
-      <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center">
-        <span class="material-symbols-outlined icon-filled" style="font-size:20px">pets</span>
-      </div>
+      <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width:36px;height:36px;object-fit:contain;border-radius:10px;background:white;padding:2px;"/>
       <div>
-        <div style="font-weight:800;font-size:15px">RabiesShield Daet</div>
-        <div style="font-size:11px;opacity:0.75">Daet Animal Bite Treatment Center</div>
+        <div style="font-weight:800;font-size:15px">ABC Connect</div>
+        <div style="font-size:11px;opacity:0.75">Animal Bite Center</div>
       </div>
     </div>
 

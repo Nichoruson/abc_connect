@@ -6,6 +6,10 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/session.php';
 
+if (!is_mobile_app()) {
+    redirect(APP_BASE . '/admin/login.php');
+}
+
 if (is_patient_logged_in()) {
     redirect(APP_BASE . '/patient/dashboard.php');
 }
@@ -42,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Patient Login | RabiesShield Daet</title>
+  <title>Patient Login | ABC Connect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
@@ -53,12 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="auth-container">
   <div class="auth-card animate-slide-up">
-    <div class="auth-logo">
-      <div class="auth-logo__icon">
-        <span class="material-symbols-outlined icon-filled">pets</span>
-      </div>
+    <div class="auth-logo" style="display: flex; align-items: center; gap: var(--space-md);">
+      <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width: 48px; height: 48px; object-fit: contain;"/>
       <div>
-        <h1 style="font-size:22px;color:var(--primary);margin:0">RabiesShield Daet</h1>
+        <h1 style="font-size:22px;color:var(--primary);margin:0">ABC Connect</h1>
         <p style="font-size:13px;color:var(--on-surface-variant);margin:0">Patient Portal</p>
       </div>
     </div>

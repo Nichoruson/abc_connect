@@ -14,7 +14,7 @@ if (!is_mobile_app()) {
     <head>
       <meta charset="UTF-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Access Restricted | RabiesShield Daet</title>
+      <title>Access Restricted | ABC Connect</title>
       <link rel="preconnect" href="https://fonts.googleapis.com"/>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
@@ -33,7 +33,7 @@ if (!is_mobile_app()) {
         </div>
         <h2 style="font-weight: 800; color: var(--on-surface); margin-bottom: var(--space-sm);">Mobile Registration Only</h2>
         <p style="color: var(--on-surface-variant); font-size: 15px; line-height: 1.6; margin-bottom: var(--space-lg);">
-          For security purposes, patient registration is strictly restricted to the official <strong>RabiesShield Daet</strong> mobile application.
+          For security purposes, patient registration is strictly restricted to the official <strong>ABC Connect</strong> mobile application.
         </p>
         <div style="background: var(--surface-container); border-radius: var(--radius-lg); padding: var(--space-md); font-size: 13px; color: var(--on-surface-variant); line-height: 1.5; margin-bottom: var(--space-lg);">
           Please open or download our mobile app on your Android or iOS device to complete your registration.
@@ -108,10 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="auth-container" style="padding:var(--space-xl) var(--space-md)">
   <div class="auth-card animate-slide-up" style="max-width:520px">
-    <div class="auth-logo">
-      <div class="auth-logo__icon">
-        <span class="material-symbols-outlined icon-filled">pets</span>
-      </div>
+    <div class="auth-logo" style="display: flex; align-items: center; gap: var(--space-md);">
+      <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width: 44px; height: 44px; object-fit: contain;"/>
       <div>
         <h1 style="font-size:20px;color:var(--primary);margin:0">Create Account</h1>
         <p style="font-size:13px;color:var(--on-surface-variant);margin:0">ABC Connect Patient Portal</p>

@@ -40,6 +40,10 @@ function is_patient_logged_in(): bool {
 }
 
 function require_patient_login(): void {
+    if (!is_mobile_app()) {
+        header('Location: ' . APP_BASE . '/admin/login.php');
+        exit;
+    }
     if (!is_patient_logged_in()) {
         header('Location: ' . APP_BASE . '/login.php');
         exit;

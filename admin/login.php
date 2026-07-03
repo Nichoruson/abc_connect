@@ -61,9 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="admin-login-left">
     <div style="max-width:420px">
       <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-xl)">
-        <div style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center">
-          <span class="material-symbols-outlined icon-filled" style="color:white;font-size:28px">pets</span>
-        </div>
+        <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width:52px;height:52px;object-fit:contain;border-radius:14px;background:white;padding:4px;"/>
         <div>
           <h1 style="color:white;font-size:22px;margin:0">ABC Connect</h1>
           <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0">Animal Bite Center</p>
@@ -73,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         Manage. Track.<br>Protect.
       </h2>
       <p style="color:rgba(255,255,255,0.75);font-size:16px;line-height:1.7">
-        A secure workspace designed for Daet Animal Bite Treatment Center personnel to track and manage clinical patient files.
+        A secure workspace designed for ABC Connect Animal Bite Center personnel to track and manage clinical patient files.
       </p>
       <div style="margin-top:var(--space-xl);display:flex;flex-direction:column;gap:var(--space-md)">
         <?php foreach (['Live queue management','Dose tracking & schedules','Inventory alerts','Patient records & reports'] as $f): ?>

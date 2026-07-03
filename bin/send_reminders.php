@@ -39,7 +39,7 @@ try {
             
         $timeSlotStr = $appt['time_slot'] ? ' at ' . $appt['time_slot'] : '';
         
-        $message = "Hello " . $appt['full_name'] . ", this is a reminder from RabiesShield Daet. You have a scheduled " . $typeLabel . " appointment tomorrow, " . date('M j, Y', strtotime($tomorrow)) . $timeSlotStr . ". Please bring your QR Pass. Thank you!";
+        $message = "Hello " . $appt['full_name'] . ", this is a reminder from ABC Connect. You have a scheduled " . $typeLabel . " appointment tomorrow, " . date('M j, Y', strtotime($tomorrow)) . $timeSlotStr . ". Please bring your QR Pass. Thank you!";
         
         echo "Sending SMS to " . $appt['full_name'] . " (" . $appt['contact_number'] . ")... ";
         

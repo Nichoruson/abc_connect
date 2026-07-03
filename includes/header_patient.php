@@ -25,8 +25,8 @@ if (!isset($schedule_badge_count) && !empty($_SESSION['patient_user_id'])) {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><?= htmlspecialchars($page_title) ?> | RabiesShield Daet</title>
-  <meta name="description" content="RabiesShield Daet — Daet ABTC patient portal for vaccine scheduling and appointment tracking."/>
+  <title><?= htmlspecialchars($page_title) ?> | ABC Connect</title>
+  <meta name="description" content="ABC Connect — Animal Bite Center patient portal for vaccine scheduling and appointment tracking."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -36,14 +36,14 @@ if (!isset($schedule_badge_count) && !empty($_SESSION['patient_user_id'])) {
   <?php if (isset($extra_css)) echo $extra_css; ?>
 </head>
 <body class="patient-body">
-
+ 
 <!-- Top App Bar -->
 <header class="patient-header">
   <a class="patient-header__brand" href="<?= APP_BASE ?>/patient/dashboard.php">
-    <div class="patient-header__logo">
-      <span class="material-symbols-outlined icon-filled" style="font-size:20px">pets</span>
+    <div class="patient-header__logo" style="background: none; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+      <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="height: 100%; width: auto; object-fit: contain;"/>
     </div>
-    <span class="patient-header__title">RabiesShield Daet</span>
+    <span class="patient-header__title">ABC Connect</span>
   </a>
   <a class="patient-header__avatar" href="<?= APP_BASE ?>/patient/profile.php" title="Profile">
     <?= $initials ?>

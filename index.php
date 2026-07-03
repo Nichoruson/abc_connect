@@ -11,6 +11,10 @@ if (is_admin_logged_in()) {
     redirect(APP_BASE . '/patient/dashboard.php');
 }
 
-// Web visitors default to Staff Portal
-redirect(APP_BASE . '/admin/login.php');
+// Route based on environment
+if (is_mobile_app()) {
+    redirect(APP_BASE . '/login.php');
+} else {
+    redirect(APP_BASE . '/admin/login.php');
+}
 ?>

@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     : 'Follow-up Dose (Day ' . $appt['dose_day'] . ')';
                 
                 $timeSlotStr = $appt['time_slot'] ? ' at ' . $appt['time_slot'] : '';
-                $message = "Hello " . $appt['full_name'] . ", this is a reminder from RabiesShield Daet. You have a scheduled " . $typeLabel . " appointment tomorrow, " . date('M j, Y', strtotime($tomorrow)) . $timeSlotStr . ". Please bring your QR Pass. Thank you!";
+                $message = "Hello " . $appt['full_name'] . ", this is a reminder from ABC Connect. You have a scheduled " . $typeLabel . " appointment tomorrow, " . date('M j, Y', strtotime($tomorrow)) . $timeSlotStr . ". Please bring your QR Pass. Thank you!";
                 
                 $result = send_sms($appt['contact_number'], $message);
                 
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($_POST['action'] === 'send_test') {
         $test_num = $_POST['test_number'] ?? '';
-        $test_body = $_POST['test_message'] ?? 'This is a test SMS from RabiesShield Daet System.';
+        $test_body = $_POST['test_message'] ?? 'This is a test SMS from ABC Connect System.';
 
         if (empty($test_num)) {
             $error_msg = 'Please enter a valid phone number.';
@@ -254,7 +254,7 @@ include __DIR__ . '/../includes/header_admin.php';
       </div>
       <div class="form-group" style="margin-bottom: var(--space-lg);">
         <label class="form-label" for="test_message">Test Message Body</label>
-        <textarea class="form-input" id="test_message" name="test_message" rows="3" required style="resize: none;">Hello! This is a test reminder from RabiesShield Daet SMS system.</textarea>
+        <textarea class="form-input" id="test_message" name="test_message" rows="3" required style="resize: none;">Hello! This is a test reminder from ABC Connect SMS system.</textarea>
       </div>
       <button class="btn btn-secondary" type="submit" style="width: 100%; justify-content: center;">
         <span class="material-symbols-outlined">send</span>

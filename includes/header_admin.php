@@ -82,8 +82,8 @@ $nav_items = [
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><?= htmlspecialchars($page_title) ?> — RabiesShield Daet Admin</title>
-  <meta name="description" content="RabiesShield Daet Admin Portal — Manage queue, patients, and daily slot capacity."/>
+  <title><?= htmlspecialchars($page_title) ?> — ABC Connect Admin</title>
+  <meta name="description" content="ABC Connect Admin Portal — Manage queue, patients, and daily slot capacity."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
@@ -97,10 +97,10 @@ $nav_items = [
 <aside class="admin-sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-brand__title">
-      <span class="material-symbols-outlined icon-filled" style="color:var(--primary);font-size:26px">pets</span>
-      <span>RabiesShield Daet</span>
+      <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width:30px;height:30px;object-fit:contain;border-radius:var(--radius-sm);"/>
+      <span>ABC Connect</span>
     </div>
-    <div class="sidebar-brand__subtitle">Daet Animal Bite Treatment Center</div>
+    <div class="sidebar-brand__subtitle">Animal Bite Center</div>
   </div>
 
   <nav class="sidebar-nav">
@@ -200,7 +200,7 @@ $nav_items = [
     </div>
     <div class="modal-body" style="padding: var(--space-lg) 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-md);">
       <p style="font-size:14px; color: var(--on-surface-variant); line-height: 1.5; margin: 0;">
-        Scan this QR code using the <strong>RabiesShield Daet</strong> mobile app to log in as staff instantly.
+        Scan this QR code using the <strong>ABC Connect</strong> mobile app to log in as staff instantly.
       </p>
       <?php if ($qrImagePath): ?>
         <img src="<?= $qrImagePath ?>" alt="App Login QR" style="border: 1px solid var(--outline-variant); border-radius: 16px; padding: 12px; background: white; width: 180px; height: 180px; box-shadow: var(--shadow-card);" />
