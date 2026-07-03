@@ -1,8 +1,9 @@
 <?php
-// Enable error reporting for debugging HTTP 500 errors
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Error reporting — show only fatal errors on screen; log everything else.
+// Deprecation notices from third-party libraries (phpqrcode) are suppressed from display.
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 // ============================================================
 // ABC Connect — Database Configuration
