@@ -54,34 +54,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $birthdate = trim($_POST['birthdate'] ?? '');
     $sex       = $_POST['sex'] ?? 'Male';
     $contact   = trim($_POST['contact'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
     $address   = trim($_POST['address'] ?? '');
     $password  = $_POST['password'] ?? '';
     $confirm   = $_POST['confirm_password'] ?? '';
 
     if (!$full_name)  $errors[] = 'Full name is required.';
     if (!$contact)    $errors[] = 'Contact number is required.';
+    if (!$email)      $errors[] = 'Email address is required.';
+    if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address format.';
     if (!$password)   $errors[] = 'Password is required.';
     if (strlen($password) < 6) $errors[] = 'Password must be at least 6 characters.';
     if ($password !== $confirm) $errors[] = 'Passwords do not match.';
 
     if (empty($errors)) {
         $db = getDB();
-        // Check duplicate
+        // Check duplicate phone
         $dup = $db->prepare("SELECT id FROM users WHERE contact_number = :c LIMIT 1");
         $dup->execute([':c' => $contact]);
         if ($dup->fetch()) {
             $errors[] = 'That contact number is already registered.';
-        } else {
+        }
+        
+        // Check duplicate email
+        if (empty($errors)) {
+            $dupEmail = $db->prepare("SELECT id FROM users WHERE email = :e LIMIT 1");
+            $dupEmail->execute([':e' => $email]);
+            if ($dupEmail->fetch()) {
+                $errors[] = 'That email address is already registered.';
+            }
+        }
+
+        if (empty($errors)) {
             $hash = password_hash($password, PASSWORD_BCRYPT);
             $ins  = $db->prepare("
-                INSERT INTO users (full_name, birthdate, sex, contact_number, address, password_hash)
-                VALUES (:name, :bd, :sex, :contact, :addr, :hash)
+                INSERT INTO users (full_name, birthdate, sex, contact_number, email, address, password_hash)
+                VALUES (:name, :bd, :sex, :contact, :email, :addr, :hash)
             ");
             $ins->execute([
                 ':name'    => $full_name,
                 ':bd'      => $birthdate ?: null,
                 ':sex'     => $sex,
                 ':contact' => $contact,
+                ':email'   => $email,
                 ':addr'    => $address,
                 ':hash'    => $hash,
             ]);
@@ -155,6 +170,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input class="form-input" type="tel" id="contact" name="contact"
                  placeholder="09XXXXXXXXX" required
                  value="<?= htmlspecialchars($_POST['contact'] ?? '') ?>"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address <span style="color:var(--error)">*</span></label>
+          <input class="form-input" type="email" id="email" name="email"
+                 placeholder="name@gmail.com" required
+                 value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="address">Address</label>

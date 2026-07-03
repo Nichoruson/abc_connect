@@ -72,6 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <?php endif; ?>
 
+    <?php 
+    $flashSuccess = flash('success');
+    if ($flashSuccess): 
+    ?>
+    <div class="alert alert-success" style="margin-bottom:var(--space-md); background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 8px; font-size: 14px;">
+      <span class="material-symbols-outlined" style="color:var(--success)">check_circle</span>
+      <span><?= htmlspecialchars($flashSuccess) ?></span>
+    </div>
+    <?php endif; ?>
+
     <form method="POST" action="" novalidate>
       <div style="display:flex;flex-direction:column;gap:var(--space-md)">
         <div class="form-group">
@@ -92,9 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </form>
 
-    <div style="text-align:center;margin-top:var(--space-lg);font-size:14px;color:var(--on-surface-variant)">
-      New patient?
-      <a href="<?= APP_BASE ?>/register.php" style="color:var(--primary);font-weight:600;text-decoration:none">Register here</a>
+    <div style="text-align:center;margin-top:var(--space-lg);font-size:14px;color:var(--on-surface-variant); display:flex; flex-direction:column; gap:var(--space-xs);">
+      <div>
+        New patient?
+        <a href="<?= APP_BASE ?>/register.php" style="color:var(--primary);font-weight:600;text-decoration:none">Register here</a>
+      </div>
+      <div style="margin-top:4px">
+        <a href="<?= APP_BASE ?>/forgot_password.php" style="color:var(--secondary);font-weight:600;text-decoration:none">Forgot Password?</a>
+      </div>
     </div>
 
     <!-- Staff QR Code Login Button -->

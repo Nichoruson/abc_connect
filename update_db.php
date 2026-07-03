@@ -35,6 +35,7 @@ $expected_tables = [
         birthdate DATE,
         sex ENUM('Male', 'Female', 'Other') DEFAULT 'Male',
         contact_number VARCHAR(20) NOT NULL UNIQUE,
+        email VARCHAR(150) NULL UNIQUE,
         address TEXT,
         password_hash VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -242,6 +243,24 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
                 } else {
                     $logs[] = ['status' => 'ok', 'message' => "Table <strong>users</strong>: column <strong>contact_number</strong> already exists."];
                 }
+
+                if (!isset($cols['email'])) {
+                    try {
+                        $db->exec("ALTER TABLE users ADD COLUMN email VARCHAR(150) NULL");
+                        $db->exec("ALTER TABLE users ADD UNIQUE KEY unique_email (email)");
+                        $logs[] = [
+                            'status' => 'success',
+                            'message' => "Added column <strong>email</strong> to <strong>users</strong> table."
+                        ];
+                    } catch (Exception $e) {
+                        $logs[] = [
+                            'status' => 'error',
+                            'message' => "Failed to add column <strong>email</strong> to <strong>users</strong>: " . $e->getMessage()
+                        ];
+                    }
+                } else {
+                    $logs[] = ['status' => 'ok', 'message' => "Table <strong>users</strong>: column <strong>email</strong> already exists."];
+                }
             }
             
             if ($table === 'admins') {
@@ -334,12 +353,13 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
     } elseif ($action === 'create_user') {
         $name = trim($_POST['full_name'] ?? '');
         $contact = trim($_POST['contact'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? 'password';
         if ($name && $contact) {
             try {
                 $hash = password_hash($password, PASSWORD_BCRYPT);
-                $stmt = $db->prepare("INSERT INTO users (full_name, contact_number, password_hash) VALUES (:n, :c, :h)");
-                $stmt->execute([':n' => $name, ':c' => $contact, ':h' => $hash]);
+                $stmt = $db->prepare("INSERT INTO users (full_name, contact_number, email, password_hash) VALUES (:n, :c, :e, :h)");
+                $stmt->execute([':n' => $name, ':c' => $contact, ':e' => $email ?: null, ':h' => $hash]);
                 $new_id = $db->lastInsertId();
                 
                 // Create patient profile
@@ -361,7 +381,7 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
 $users = [];
 if ($db) {
     try {
-        $users = $db->query("SELECT id, full_name, contact_number FROM users ORDER BY id DESC LIMIT 15")->fetchAll();
+        $users = $db->query("SELECT id, full_name, contact_number, email FROM users ORDER BY id DESC LIMIT 15")->fetchAll();
     } catch (Exception $e) {
         // Table users might not exist or be mismatching
     }
@@ -391,8 +411,9 @@ if ($db) {
             $cols = getTableColumnsList($db, $table);
             $missing = [];
             
-            if ($table === 'users' && !isset($cols['contact_number'])) {
-                $missing[] = 'contact_number';
+            if ($table === 'users') {
+                if (!isset($cols['contact_number'])) $missing[] = 'contact_number';
+                if (!isset($cols['email'])) $missing[] = 'email';
             }
             if ($table === 'admins' && !isset($cols['app_login_token'])) {
                 $missing[] = 'app_login_token';
@@ -786,6 +807,7 @@ if ($db) {
             <tr style="border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
               <th style="padding: 12px 16px; color: var(--text-muted);">Name</th>
               <th style="padding: 12px 16px; color: var(--text-muted);">Contact Number</th>
+              <th style="padding: 12px 16px; color: var(--text-muted);">Email</th>
               <th style="padding: 12px 16px; text-align: right; color: var(--text-muted);">Actions</th>
             </tr>
           </thead>
@@ -794,6 +816,7 @@ if ($db) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
                 <td style="padding: 12px 16px; font-weight: 600; color: #fff;"><?= htmlspecialchars($u['full_name']) ?></td>
                 <td style="padding: 12px 16px; font-family: monospace;"><?= htmlspecialchars($u['contact_number'] ?: 'N/A') ?></td>
+                <td style="padding: 12px 16px; font-family: monospace;"><?= htmlspecialchars($u['email'] ?: 'N/A') ?></td>
                 <td style="padding: 12px 16px; text-align: right;">
                   <form method="POST" style="display: inline;">
                     <input type="hidden" name="action" value="reset_password">
@@ -812,7 +835,7 @@ if ($db) {
       <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; margin-bottom: 12px; color: #fff;">Create Test Patient Account</h3>
       <form method="POST" style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
         <input type="hidden" name="action" value="create_user">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Full Name</label>
             <input type="text" name="full_name" placeholder="John Doe" required style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
@@ -820,6 +843,10 @@ if ($db) {
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Contact Number</label>
             <input type="text" name="contact" placeholder="09123456789" required style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Email Address</label>
+            <input type="email" name="email" placeholder="john@example.com" style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #fff; font-family: inherit;">
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Password</label>

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
     birthdate DATE,
     sex ENUM('Male', 'Female', 'Other') DEFAULT 'Male',
     contact_number VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(150) NULL UNIQUE,
     address TEXT,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -175,11 +176,11 @@ INSERT INTO notifications (type, title, message) VALUES
 ('warning', 'Low Stock', 'Tetanus Toxoid is running low. Current stock: 15 vials.');
 
 -- Sample Users
-INSERT INTO users (full_name, birthdate, sex, contact_number, address, password_hash) VALUES
-('Mark Robertson', '1990-05-15', 'Male', '09171234567', '123 Main St, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Sarah Chen', '1995-08-20', 'Female', '09281234567', '456 Oak Ave, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('James Wilson', '1985-03-10', 'Male', '09391234567', '789 Pine Rd, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Alice Thompson', '2000-11-25', 'Female', '09401234567', '321 Cedar Blvd, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+INSERT INTO users (full_name, birthdate, sex, contact_number, email, address, password_hash) VALUES
+('Mark Robertson', '1990-05-15', 'Male', '09171234567', 'mark@example.com', '123 Main St, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Sarah Chen', '1995-08-20', 'Female', '09281234567', 'sarah@example.com', '456 Oak Ave, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('James Wilson', '1985-03-10', 'Male', '09391234567', 'james@example.com', '789 Pine Rd, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Alice Thompson', '2000-11-25', 'Female', '09401234567', 'alice@example.com', '321 Cedar Blvd, Daet, Camarines Norte', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 -- Sample Patients
 INSERT INTO patients (user_id, patient_code, animal_type, animal_ownership, bite_date, body_location, category, registered_by) VALUES
