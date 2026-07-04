@@ -43,7 +43,10 @@ $qrLibPath = __DIR__ . '/../assets/libs/phpqrcode/qrlib.php';
 $qrImagePath = null;
 if (file_exists($qrLibPath)) {
     require_once $qrLibPath;
-    $tmpDir = sys_get_temp_dir();
+    $tmpDir = __DIR__ . '/../logs';
+    if (!is_dir($tmpDir)) {
+        mkdir($tmpDir, 0777, true);
+    }
     $qrFile = $tmpDir . '/pass_' . $appt['id'] . '_' . substr($appt['qr_token'], 0, 8) . '.png';
     if (!file_exists($qrFile)) {
         QRcode::png($qrPayload, $qrFile, QR_ECLEVEL_H, 8, 2);

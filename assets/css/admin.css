@@ -710,3 +710,41 @@
   .admin-topbar { padding: 0 var(--space-md); }
   .topbar-search { display: none; }
 }
+
+/* ---- Staff QR Scanner Mobile View overrides ---- */
+.staff-qr-body .admin-sidebar {
+  display: none !important;
+}
+.staff-qr-body .admin-main {
+  margin-left: 0 !important;
+}
+.staff-qr-body .admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  left: 0; right: 0;
+  padding: 0 var(--space-lg);
+}
+.staff-qr-body .admin-content {
+  padding: var(--space-md);
+  gap: var(--space-md);
+}
+
+@media (max-width: 480px) {
+  .staff-qr-name-label {
+    display: none !important;
+  }
+  .staff-qr-logout-text {
+    display: none !important;
+  }
+  .staff-qr-divider {
+    display: none !important;
+  }
+  .staff-qr-body .admin-topbar {
+    padding: 0 var(--space-sm) !important;
+  }
+  .staff-qr-body .topbar-brand-mobile span {
+    font-size: 14px !important;
+  }
+}
+

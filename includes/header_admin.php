@@ -30,11 +30,15 @@ if ($adminId) {
            ->execute([':token' => $appLoginToken, ':id' => $adminId]);
     }
     
-    // Generate QR code using the built-in phpqrcode library
+    // Generate staff login token QR if needed
     $qrLibPath = __DIR__ . '/../assets/libs/phpqrcode/qrlib.php';
+    $qrImagePath = null;
     if (file_exists($qrLibPath)) {
         require_once $qrLibPath;
-        $tmpDir = sys_get_temp_dir();
+        $tmpDir = __DIR__ . '/../logs';
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0777, true);
+        }
         $qrFile = $tmpDir . '/staff_login_' . $adminId . '.png';
         
         $qrPayload = json_encode([
@@ -97,9 +101,10 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
   <link rel="stylesheet" href="<?= APP_BASE ?>/assets/css/admin.css"/>
   <?php if (isset($extra_css)) echo $extra_css; ?>
 </head>
-<body class="admin-body">
+<body class="admin-body <?= (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true) ? 'staff-qr-body' : '' ?>">
 
 <!-- ========== SIDEBAR ========== -->
+<?php if (!(isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true)): ?>
 <aside class="admin-sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-brand__title">
@@ -132,70 +137,85 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
     </a>
   </div>
 </aside>
+<?php endif; ?>
 
 <!-- ========== MAIN ========== -->
 <div class="admin-main">
 
   <!-- Top Bar -->
   <header class="admin-topbar">
-    <?php if (!(isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true)): ?>
-    <div class="topbar-search">
-      <span class="material-symbols-outlined" style="color:var(--on-surface-variant);font-size:20px">search</span>
-      <input type="text" id="global-search" placeholder="Search patients, vaccines..." autocomplete="off"/>
-    </div>
-    <?php else: ?>
-    <div></div>
-    <?php endif; ?>
-    <div class="topbar-actions">
-      <?php if (!(isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true)): ?>
-      <div class="topbar-notif-wrap">
-        <button class="topbar-notif" id="notif-btn" title="Notifications" aria-expanded="false" aria-controls="notif-dropdown">
-          <span class="material-symbols-outlined">notifications</span>
-          <?php if ($notif_count > 0): ?>
-          <span class="topbar-notif__badge" id="notif-badge"><?= $notif_count > 9 ? '9+' : $notif_count ?></span>
-          <?php endif; ?>
-        </button>
-        <div class="notif-dropdown" id="notif-dropdown" hidden>
-          <div class="notif-dropdown__header">
-            <span>Notifications</span>
-            <?php if ($notif_count > 0): ?>
-            <span class="notif-dropdown__count"><?= $notif_count ?> unread</span>
-            <?php endif; ?>
-          </div>
-          <?php if (empty($notif_items)): ?>
-          <p class="notif-dropdown__empty">No new notifications.</p>
-          <?php else: ?>
-          <div class="notif-dropdown__list">
-            <?php foreach ($notif_items as $n):
-              $icon = match($n['type']) {
-                'critical' => 'report',
-                'warning'  => 'warning',
-                'success'  => 'sync',
-                default    => 'info',
-              };
-            ?>
-            <div class="notif-dropdown__item">
-              <span class="material-symbols-outlined notif-dropdown__icon notif-dropdown__icon--<?= htmlspecialchars($n['type']) ?>"><?= $icon ?></span>
-              <div>
-                <div class="notif-dropdown__title"><?= htmlspecialchars($n['title']) ?></div>
-                <div class="notif-dropdown__desc"><?= htmlspecialchars($n['message']) ?></div>
-              </div>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <?php endif; ?>
-          <a href="<?= APP_BASE ?>/admin/dashboard.php" class="notif-dropdown__footer">View all on Dashboard</a>
-        </div>
+    <?php if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] === true): ?>
+      <!-- Staff Mobile Logo & Title -->
+      <div class="topbar-brand-mobile" style="display:flex;align-items:center;gap:8px;">
+        <img src="<?= APP_BASE ?>/assets/logo.png" alt="ABC Connect Logo" style="width:28px;height:28px;object-fit:contain;border-radius:var(--radius-sm);"/>
+        <span style="font-weight:700;color:var(--primary);font-size:16px;letter-spacing:-0.01em;">ABC Scanner</span>
       </div>
-      <!-- App Access Trigger -->
-      <button class="btn btn-surface btn-sm btn-pill" onclick="openModal('modal-app-login')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;margin-right:8px;font-size:12px;font-weight:600;" title="Link Mobile App">
-        <span class="material-symbols-outlined" style="font-size:16px;">phone_iphone</span>
-        <span>App Access</span>
-      </button>
-      <div style="width:1px;height:28px;background:var(--outline-variant)"></div>
-      <?php endif; ?>
-      <span class="topbar-page-title"><?= htmlspecialchars($page_title) ?></span>
-    </div>
+      
+      <!-- Staff Mobile Actions (User & Logout) -->
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="sidebar-user__avatar" style="width:32px;height:32px;font-size:12px;background:var(--primary-container);color:var(--on-primary-container)"><?= htmlspecialchars($admin_initials) ?></div>
+          <span class="staff-qr-name-label" style="font-size:13px;font-weight:600;color:var(--on-surface);"><?= htmlspecialchars($admin_name) ?></span>
+        </div>
+        <div class="staff-qr-divider" style="width:1px;height:20px;background:var(--outline-variant);"></div>
+        <a class="btn btn-surface btn-sm" href="<?= APP_BASE ?>/admin/logout.php" style="display:flex;align-items:center;gap:4px;padding:6px 10px;font-size:12px;border-radius:var(--radius-md);height:32px;box-sizing:border-box;">
+          <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+          <span class="staff-qr-logout-text">Logout</span>
+        </a>
+      </div>
+    <?php else: ?>
+      <div class="topbar-search">
+        <span class="material-symbols-outlined" style="color:var(--on-surface-variant);font-size:20px">search</span>
+        <input type="text" id="global-search" placeholder="Search patients, vaccines..." autocomplete="off"/>
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-notif-wrap">
+          <button class="topbar-notif" id="notif-btn" title="Notifications" aria-expanded="false" aria-controls="notif-dropdown">
+            <span class="material-symbols-outlined">notifications</span>
+            <?php if ($notif_count > 0): ?>
+            <span class="topbar-notif__badge" id="notif-badge"><?= $notif_count > 9 ? '9+' : $notif_count ?></span>
+            <?php endif; ?>
+          </button>
+          <div class="notif-dropdown" id="notif-dropdown" hidden>
+            <div class="notif-dropdown__header">
+              <span>Notifications</span>
+              <?php if ($notif_count > 0): ?>
+              <span class="notif-dropdown__count"><?= $notif_count ?> unread</span>
+              <?php endif; ?>
+            </div>
+            <?php if (empty($notif_items)): ?>
+            <p class="notif-dropdown__empty">No new notifications.</p>
+            <?php else: ?>
+            <div class="notif-dropdown__list">
+              <?php foreach ($notif_items as $n):
+                $icon = match($n['type']) {
+                  'critical' => 'report',
+                  'warning'  => 'warning',
+                  'success'  => 'sync',
+                  default    => 'info',
+                };
+              ?>
+              <div class="notif-dropdown__item">
+                <span class="material-symbols-outlined notif-dropdown__icon notif-dropdown__icon--<?= htmlspecialchars($n['type']) ?>"><?= $icon ?></span>
+                <div>
+                  <div class="notif-dropdown__title"><?= htmlspecialchars($n['title']) ?></div>
+                  <div class="notif-dropdown__desc"><?= htmlspecialchars($n['message']) ?></div>
+                </div>
+              </div>
+              <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <a href="<?= APP_BASE ?>/admin/dashboard.php" class="notif-dropdown__footer">View all on Dashboard</a>
+          </div>
+        </div>
+        <button class="btn btn-surface btn-sm btn-pill" onclick="openModal('modal-app-login')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;margin-right:8px;font-size:12px;font-weight:600;" title="Link Mobile App">
+          <span class="material-symbols-outlined" style="font-size:16px;">phone_iphone</span>
+          <span>App Access</span>
+        </button>
+        <div style="width:1px;height:28px;background:var(--outline-variant)"></div>
+        <span class="topbar-page-title"><?= htmlspecialchars($page_title) ?></span>
+      </div>
+    <?php endif; ?>
   </header>
 
   <!-- Content Canvas -->

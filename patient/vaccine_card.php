@@ -61,7 +61,11 @@ $qrLibPath  = __DIR__ . '/../assets/libs/phpqrcode/qrlib.php';
 $qrImageB64 = null;
 if (file_exists($qrLibPath)) {
     require_once $qrLibPath;
-    $qrFile = sys_get_temp_dir() . '/card_' . $patient['id'] . '.png';
+    $tmpDir = __DIR__ . '/../logs';
+    if (!is_dir($tmpDir)) {
+        mkdir($tmpDir, 0777, true);
+    }
+    $qrFile = $tmpDir . '/card_' . $patient['id'] . '.png';
     if (!file_exists($qrFile)) {
         QRcode::png($cardPayload, $qrFile, QR_ECLEVEL_H, 6, 2);
     }

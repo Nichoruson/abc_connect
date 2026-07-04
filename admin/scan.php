@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // RabiesShield Daet — Admin: QR Scanner / Entry Verification
 // Staff scans patient QR code to verify appointment
@@ -75,7 +75,7 @@ include __DIR__ . '/../includes/header_admin.php';
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);align-items:start" class="animate-fade-in stagger-2">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr));gap:var(--space-lg);align-items:start" class="animate-fade-in stagger-2">
 
   <!-- Camera Scanner -->
   <div class="card">
@@ -83,7 +83,7 @@ include __DIR__ . '/../includes/header_admin.php';
       <span class="material-symbols-outlined icon-filled" style="color:var(--primary)">camera_alt</span>
       Camera Scan
     </h3>
-    <div style="position:relative">
+    <div style="position:relative; overflow:hidden; border-radius:16px; max-width:360px; margin:0 auto;">
       <video id="scanner-video" autoplay playsinline></video>
       <canvas id="scanner-canvas"></canvas>
       <div id="scan-overlay" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid var(--primary);border-radius:12px;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,0.4)"></div>
