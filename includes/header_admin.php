@@ -81,7 +81,6 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
       ['key' => 'daily_cap', 'icon' => 'event_available',  'label' => 'Daily Cap',   'href' => APP_BASE . '/admin/daily_cap.php'],
       ['key' => 'scanner',   'icon' => 'qr_code_scanner',  'label' => 'QR Scanner',  'href' => APP_BASE . '/admin/scan.php'],
       ['key' => 'patients',  'icon' => 'personal_injury',  'label' => 'Patients',    'href' => APP_BASE . '/admin/patients.php'],
-      ['key' => 'inventory', 'icon' => 'inventory_2',      'label' => 'Inventory',   'href' => APP_BASE . '/admin/inventory.php'],
       ['key' => 'reports',   'icon' => 'assessment',       'label' => 'Reports',     'href' => APP_BASE . '/admin/reports.php'],
       ['key' => 'reminders', 'icon' => 'sms',             'label' => 'SMS Reminders', 'href' => APP_BASE . '/admin/sms_reminders.php'],
     ];

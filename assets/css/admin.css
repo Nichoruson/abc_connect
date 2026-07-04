@@ -471,12 +471,6 @@
 }
 .q-btn-noshow:hover { background: var(--error-container); }
 
-/* ---- Inventory Progress Bars ---- */
-.inventory-item { margin-bottom: var(--space-md); }
-.inventory-item:last-child { margin-bottom: 0; }
-.inventory-item__header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.inventory-item__name   { font-size: var(--text-label-sm); font-weight: 600; }
-.inventory-item__pct    { font-size: var(--text-label-sm); font-weight: 700; }
 
 .progress-bar {
   width: 100%;
@@ -494,18 +488,6 @@
 .progress-bar__fill--warning  { background: #f59e0b; }
 .progress-bar__fill--critical { background: var(--error); }
 
-.inventory-alert {
-  margin-top: 6px;
-  padding: 6px 10px;
-  background: var(--error-container);
-  border: 1px solid rgba(186, 26, 26, 0.2);
-  border-radius: var(--radius-md);
-  font-size: 11px;
-  color: var(--on-error-container);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 
 /* ---- System Notifications Panel ---- */
 .notif-panel {

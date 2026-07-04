@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // ABC Connect — Admin Dashboard (main Stitch screen)
 // ============================================================
@@ -37,9 +37,6 @@ $dailyBooked = (int)$db->query("SELECT COUNT(*) FROM appointments WHERE appointm
 $dailyRemaining = max(0, $dailyMax - $dailyBooked);
 $slotPct = $dailyMax > 0 ? min(100, round(($dailyBooked / $dailyMax) * 100)) : 0;
 
-// ---- Inventory ----
-$inventory = $db->query("SELECT * FROM inventory ORDER BY (quantity/threshold_low) ASC")->fetchAll();
-
 // ---- Notifications ----
 $notifications = $db->query("SELECT * FROM notifications WHERE is_read=0 ORDER BY created_at DESC LIMIT 5")->fetchAll();
 
@@ -50,15 +47,6 @@ $queueData = [
     'vaccinated'      => $db->query("SELECT q.*,p.patient_code,p.body_location,p.category,p.animal_type,p.animal_ownership,u.full_name FROM queue q JOIN patients p ON q.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE q.status='vaccinated' AND DATE(q.queued_at)='$today' ORDER BY q.queued_at ASC")->fetchAll(),
 ];
 
-function inventoryPct(array $item): float {
-    $max = max($item['quantity'], $item['threshold_low'] * 2, 10);
-    return min(100, round(($item['quantity'] / $max) * 100));
-}
-function inventoryColor(array $item): string {
-    if ($item['quantity'] <= $item['threshold_critical']) return 'critical';
-    if ($item['quantity'] <= $item['threshold_low'])     return 'warning';
-    return 'good';
-}
 function waitLabel(string $queuedAt): string {
     $mins = max(0, (int)((time() - strtotime($queuedAt)) / 60));
     return $mins >= 60 ? round($mins/60, 1).'h wait' : $mins.'m wait';
@@ -262,8 +250,8 @@ include __DIR__ . '/../includes/header_admin.php';
   </div>
 </div>
 
-<!-- ===== BOTTOM ROW: Chart + Inventory + Notifications ===== -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-md)">
+<!-- ===== BOTTOM ROW: Chart + Notifications ===== -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 360px), 1fr));gap:var(--space-md)">
 
   <!-- Patient Flow Chart -->
   <div class="card animate-fade-in stagger-3">
@@ -282,38 +270,6 @@ include __DIR__ . '/../includes/header_admin.php';
     <div class="bar-chart-labels">
       <span>8 AM</span><span>Noon</span><span>4 PM</span>
     </div>
-  </div>
-
-  <!-- Inventory Panel -->
-  <div class="card animate-fade-in stagger-3">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md)">
-      <h4 style="font-weight:700">Inventory Alerts</h4>
-      <a href="<?= APP_BASE ?>/admin/inventory.php" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none">Manage →</a>
-    </div>
-    <?php foreach ($inventory as $inv):
-      $pct   = inventoryPct($inv);
-      $color = inventoryColor($inv);
-    ?>
-    <div class="inventory-item">
-      <div class="inventory-item__header">
-        <span class="inventory-item__name <?= $color === 'critical' ? 'text-error' : '' ?>">
-          <?= htmlspecialchars($inv['vaccine_name']) ?>
-        </span>
-        <span class="inventory-item__pct <?= $color === 'critical' ? 'text-error' : 'text-primary' ?>">
-          <?= $inv['quantity'] ?> <?= htmlspecialchars($inv['unit']) ?>
-        </span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar__fill progress-bar__fill--<?= $color ?>" style="width:<?= $pct ?>%"></div>
-      </div>
-      <?php if ($color === 'critical' || $color === 'warning'): ?>
-      <div class="inventory-alert">
-        <span class="material-symbols-outlined" style="font-size:14px">warning</span>
-        <?= $color === 'critical' ? 'Critical: Reorder immediately' : 'Low stock warning' ?>
-      </div>
-      <?php endif; ?>
-    </div>
-    <?php endforeach; ?>
   </div>
 
   <!-- System Notifications -->

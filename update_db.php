@@ -106,16 +106,6 @@ $expected_tables = [
         FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
         FOREIGN KEY (administered_by) REFERENCES admins(id) ON DELETE SET NULL
     )",
-    'inventory' => "CREATE TABLE inventory (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        vaccine_name VARCHAR(100) NOT NULL,
-        quantity INT NOT NULL DEFAULT 0,
-        unit VARCHAR(20) DEFAULT 'vials',
-        threshold_low INT DEFAULT 20,
-        threshold_critical INT DEFAULT 10,
-        last_restocked TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )",
     'notifications' => "CREATE TABLE notifications (
         id INT AUTO_INCREMENT PRIMARY KEY,
         type ENUM('info', 'warning', 'critical', 'success') DEFAULT 'info',
@@ -179,13 +169,6 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
                     ('dr.aris', '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Dr. Aris Santos', 'doctor', 'AS'),
                     ('nurse01', '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Nurse Maria Cruz', 'nurse', 'MC')");
                     $logs[] = ['status' => 'info', 'message' => "Seeded default administrator accounts."];
-                } elseif ($table === 'inventory') {
-                    $db->exec("INSERT INTO inventory (vaccine_name, quantity, unit, threshold_low, threshold_critical) VALUES
-                    ('Rabies Vaccine (PCECV)', 80, 'vials', 30, 15),
-                    ('Tetanus Toxoid', 15, 'vials', 25, 10),
-                    ('Rabies Immunoglobulin (ERIG)', 40, 'vials', 20, 8),
-                    ('Anti-Tetanus Serum', 35, 'vials', 15, 5)");
-                    $logs[] = ['status' => 'info', 'message' => "Seeded initial inventory items."];
                 }
             } catch (Exception $e) {
                 $logs[] = [

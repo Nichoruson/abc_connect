@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         A secure workspace designed for ABC Connect Animal Bite Center personnel to track and manage clinical patient files.
       </p>
       <div style="margin-top:var(--space-xl);display:flex;flex-direction:column;gap:var(--space-md)">
-        <?php foreach (['Live queue management','Dose tracking & schedules','Inventory alerts','Patient records & reports'] as $f): ?>
+        <?php foreach (['Live queue management','Dose tracking & schedules','Patient records & reports'] as $f): ?>
         <div style="display:flex;align-items:center;gap:var(--space-sm);color:rgba(255,255,255,0.85);font-size:14px;font-weight:500">
           <span class="material-symbols-outlined icon-filled" style="font-size:18px;color:var(--primary-container)">check_circle</span>
           <?= $f ?>

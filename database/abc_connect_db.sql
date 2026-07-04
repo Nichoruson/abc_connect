@@ -121,19 +121,6 @@ CREATE TABLE IF NOT EXISTS vaccines (
     FOREIGN KEY (administered_by) REFERENCES admins(id) ON DELETE SET NULL
 );
 
--- ============================================================
--- INVENTORY
--- ============================================================
-CREATE TABLE IF NOT EXISTS inventory (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    vaccine_name VARCHAR(100) NOT NULL,
-    quantity INT NOT NULL DEFAULT 0,
-    unit VARCHAR(20) DEFAULT 'vials',
-    threshold_low INT DEFAULT 20 COMMENT 'Alert when below this',
-    threshold_critical INT DEFAULT 10 COMMENT 'Critical when below this',
-    last_restocked TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
 
 -- ============================================================
 -- NOTIFICATIONS (System Alerts)
@@ -162,12 +149,6 @@ INSERT INTO admins (username, password_hash, full_name, role, avatar_initials) V
 -- Note: default password hash above is 'password' for testing
 -- In production, generate proper hashes
 
--- Vaccine Inventory
-INSERT INTO inventory (vaccine_name, quantity, unit, threshold_low, threshold_critical) VALUES
-('Rabies Vaccine (PCECV)', 80, 'vials', 30, 15),
-('Tetanus Toxoid', 15, 'vials', 25, 10),
-('Rabies Immunoglobulin (ERIG)', 40, 'vials', 20, 8),
-('Anti-Tetanus Serum', 35, 'vials', 15, 5);
 
 -- System Notifications
 INSERT INTO notifications (type, title, message) VALUES
