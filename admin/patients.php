@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // ABC Connect — Admin: Patient List
 // Handles both listing and adding walk-in patients
@@ -36,23 +36,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_w
         $count = (int)$db->query("SELECT COUNT(*) FROM patients")->fetchColumn() + 1;
         $pCode = 'P-' . str_pad($count + 9000, 4, '0', STR_PAD_LEFT);
 
+        $firstDoseDate = $_POST['first_dose_date'] ?? date('Y-m-d');
+
         $db->prepare("INSERT INTO patients (user_id, patient_code, animal_type, animal_ownership, bite_date, body_location, category, registered_by) VALUES (:uid,:code,:at,:own,:bd,:bl,:cat,:adm)")
            ->execute([':uid'=>$userId,':code'=>$pCode,':at'=>$animalT,':own'=>$ownership,':bd'=>$biteDate,':bl'=>$bodyLoc,':cat'=>$category,':adm'=>$_SESSION['admin_id']]);
         $newPatId = (int)$db->lastInsertId();
 
         // Vaccine schedule
         foreach ([0=>1,3=>2,7=>3,14=>4,28=>5] as $day=>$dn) {
-            $sd = date('Y-m-d', strtotime($biteDate."+$day days"));
+            $sd = date('Y-m-d', strtotime($firstDoseDate."+$day days"));
             $db->prepare("INSERT INTO vaccines (patient_id,dose_number,dose_day,scheduled_date,status) VALUES (:pid,:dn,:dd,:sd,'scheduled')")
                ->execute([':pid'=>$newPatId,':dn'=>$dn,':dd'=>$day,':sd'=>$sd]);
         }
 
-        // Queue
-        $qNum = 'Q-' . str_pad((int)$db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at)=CURDATE()")->fetchColumn() + 1, 3, '0', STR_PAD_LEFT);
-        $db->prepare("INSERT INTO queue (patient_id,queue_number,status,purpose) VALUES (:pid,:qn,'waiting','first_evaluation')")
-           ->execute([':pid'=>$newPatId,':qn'=>$qNum]);
-
-        flash('success', "Patient $fullName added. Queue #$qNum assigned.");
+        // Queue or Appointment
+        $today = date('Y-m-d');
+        if ($firstDoseDate === $today) {
+            $qNum = 'Q-' . str_pad((int)$db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at)=CURDATE()")->fetchColumn() + 1, 3, '0', STR_PAD_LEFT);
+            $db->prepare("INSERT INTO queue (patient_id,queue_number,status,purpose) VALUES (:pid,:qn,'waiting','first_evaluation')")
+               ->execute([':pid'=>$newPatId,':qn'=>$qNum]);
+            flash('success', "Patient $fullName added. Queue #$qNum assigned.");
+        } else {
+            $qrToken = bin2hex(random_bytes(32));
+            $db->prepare("INSERT INTO appointments (patient_id, appointment_type, dose_day, appointment_date, status, qr_token) VALUES (:pid, 'first_evaluation', 0, :date, 'scheduled', :token)")
+               ->execute([
+                   ':pid'   => $newPatId,
+                   ':date'  => $firstDoseDate,
+                   ':token' => $qrToken
+               ]);
+            $dateFormatted = date('F j, Y', strtotime($firstDoseDate));
+            flash('success', "Patient $fullName added. Appointment scheduled for $dateFormatted.");
+        }
         redirect(APP_BASE . '/admin/patients.php');
     }
 }
@@ -238,11 +252,17 @@ include __DIR__ . '/../includes/header_admin.php';
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-md)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
           <div class="form-group">
             <label class="form-label">Bite Date</label>
             <input class="form-input" type="date" name="bite_date" value="<?= date('Y-m-d') ?>"/>
           </div>
+          <div class="form-group">
+            <label class="form-label">First Dose Date (Day 0)</label>
+            <input class="form-input" type="date" name="first_dose_date" value="<?= date('Y-m-d') ?>"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
           <div class="form-group">
             <label class="form-label">Category</label>
             <select class="form-select" name="category">

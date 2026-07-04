@@ -152,6 +152,11 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
       
       <!-- Staff Mobile Actions (User & Logout) -->
       <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:4px;color:var(--on-surface-variant);font-size:12px;font-weight:600;">
+          <span class="material-symbols-outlined" style="font-size:14px;color:var(--primary)">schedule</span>
+          <span class="system-clock-label system-clock-label--short"><?= date('g:i A') ?></span>
+        </div>
+        <div class="staff-qr-divider" style="width:1px;height:20px;background:var(--outline-variant);"></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div class="sidebar-user__avatar" style="width:32px;height:32px;font-size:12px;background:var(--primary-container);color:var(--on-primary-container)"><?= htmlspecialchars($admin_initials) ?></div>
           <span class="staff-qr-name-label" style="font-size:13px;font-weight:600;color:var(--on-surface);"><?= htmlspecialchars($admin_name) ?></span>
@@ -211,8 +216,12 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
           <span class="material-symbols-outlined" style="font-size:16px;">phone_iphone</span>
           <span>App Access</span>
         </button>
+        <div class="topbar-clock-wrap" style="display:flex;align-items:center;gap:6px;background:var(--surface-container-high);padding:6px 14px;border-radius:var(--radius-pill);border:1px solid var(--border);color:var(--on-surface-variant);font-size:13px;font-weight:600;margin-right:8px;" title="Philippine Standard Time (PST)">
+          <span class="material-symbols-outlined icon-filled" style="font-size:16px;color:var(--primary)">schedule</span>
+          <span class="system-clock-label"><?= date('M j, Y, g:i:s A') ?></span>
+        </div>
         <div style="width:1px;height:28px;background:var(--outline-variant)"></div>
-        <span class="topbar-page-title"><?= htmlspecialchars($page_title) ?></span>
+        <span class="topbar-page-title" style="margin-left:12px;"><?= htmlspecialchars($page_title) ?></span>
       </div>
     <?php endif; ?>
   </header>
@@ -247,3 +256,47 @@ if (isset($_SESSION['staff_logged_via_qr']) && $_SESSION['staff_logged_via_qr'] 
     </div>
   </div>
 </div>
+
+<script>
+  // Dynamic clock script using server timezone (Philippine Standard Time)
+  document.addEventListener('DOMContentLoaded', function() {
+      const clockLabels = document.querySelectorAll('.system-clock-label');
+      if (clockLabels.length === 0) return;
+      
+      let serverTime = <?= time() * 1000 ?>;
+      
+      function updateClocks() {
+          const date = new Date(serverTime);
+          
+          clockLabels.forEach(el => {
+              if (el.classList.contains('system-clock-label--short')) {
+                  const options = {
+                      timeZone: 'Asia/Manila',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                  };
+                  el.textContent = new Intl.DateTimeFormat('en-US', options).format(date);
+              } else {
+                  const options = {
+                      timeZone: 'Asia/Manila',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                  };
+                  el.textContent = new Intl.DateTimeFormat('en-US', options).format(date);
+              }
+          });
+      }
+      
+      updateClocks();
+      setInterval(function() {
+          serverTime += 1000;
+          updateClocks();
+      }, 1000);
+  });
+</script>

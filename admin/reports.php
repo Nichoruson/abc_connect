@@ -67,13 +67,33 @@ include __DIR__ . '/../includes/header_admin.php';
     <h1 class="page-header__title">Reports & Analytics</h1>
     <p class="page-header__sub"><?= date('F j, Y', strtotime($from)) ?> – <?= date('F j, Y', strtotime($to)) ?></p>
   </div>
-  <form method="GET" style="display:flex;align-items:center;gap:var(--space-sm)">
-    <label class="form-label" style="white-space:nowrap">From</label>
-    <input class="form-input" type="date" name="from" value="<?= $from ?>"/>
-    <label class="form-label" style="white-space:nowrap">To</label>
-    <input class="form-input" type="date" name="to" value="<?= $to ?>" max="<?= date('Y-m-d') ?>"/>
-    <button class="btn btn-primary btn-sm" type="submit">Apply</button>
-  </form>
+  <div style="display:flex;align-items:center;gap:var(--space-sm)">
+    <form method="GET" style="display:flex;align-items:center;gap:var(--space-sm);margin:0">
+      <label class="form-label" style="white-space:nowrap;margin:0">From</label>
+      <input class="form-input" type="date" name="from" value="<?= $from ?>"/>
+      <label class="form-label" style="white-space:nowrap;margin:0">To</label>
+      <input class="form-input" type="date" name="to" value="<?= $to ?>" max="<?= date('Y-m-d') ?>"/>
+      <button class="btn btn-primary btn-sm" type="submit">Apply</button>
+    </form>
+    
+    <div style="position:relative;display:inline-block;" id="export-dropdown-wrap">
+      <button class="btn btn-surface btn-sm" onclick="const el = document.getElementById('export-dropdown'); el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" style="display:flex;align-items:center;gap:6px;height:36px;box-sizing:border-box;">
+        <span class="material-symbols-outlined" style="font-size:18px">download</span>
+        <span>Export</span>
+        <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
+      </button>
+      <div id="export-dropdown" class="card" style="position:absolute;top:100%;right:0;margin-top:6px;width:160px;z-index:100;display:none;flex-direction:column;padding:4px;box-shadow:var(--shadow-card);background:var(--surface-container-high);border:1px solid var(--border);border-radius:var(--radius-md);">
+        <a href="<?= APP_BASE ?>/admin/export.php?format=csv&from=<?= $from ?>&to=<?= $to ?>" style="padding:10px 12px;font-size:13px;border-radius:var(--radius-sm);color:var(--on-surface);text-decoration:none;display:flex;align-items:center;gap:8px;font-weight:500;" class="sidebar-nav__item">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--primary)">table_view</span>
+          <span>Download CSV</span>
+        </a>
+        <a href="<?= APP_BASE ?>/admin/export.php?format=print&from=<?= $from ?>&to=<?= $to ?>" target="_blank" style="padding:10px 12px;font-size:13px;border-radius:var(--radius-sm);color:var(--on-surface);text-decoration:none;display:flex;align-items:center;gap:8px;font-weight:500;" class="sidebar-nav__item">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--secondary)">print</span>
+          <span>Print / PDF</span>
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Stats -->
@@ -91,7 +111,7 @@ include __DIR__ . '/../includes/header_admin.php';
     <div><div class="stat-card__label">Treatment Completed</div><div class="stat-card__value"><?= $completed ?></div><div class="stat-card__trend"><?= $completionRate ?>% completion rate</div></div>
   </div>
   <div class="stat-card">
-    <div class="stat-card__icon stat-card__icon--error"><span class="material-symbols-outlined icon-filled">person_off</span></div>
+    <div class="stat-card__icon stat-card__icon--error"><span class="material-symbols-outlined icon-filled">person_remove</span></div>
     <div><div class="stat-card__label">No-Shows</div><div class="stat-card__value"><?= $noShows ?></div></div>
   </div>
 </div>
@@ -190,5 +210,12 @@ include __DIR__ . '/../includes/header_admin.php';
     </button>
   </div>
 </div>
+
+<script>
+  window.addEventListener('click', function() {
+      const el = document.getElementById('export-dropdown');
+      if (el) el.style.display = 'none';
+  });
+</script>
 
 <?php include __DIR__ . '/../includes/footer_admin.php'; ?>

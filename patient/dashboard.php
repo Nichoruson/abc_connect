@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 // ABC Connect — Patient Dashboard (main Stitch screen)
 // ============================================================
@@ -26,6 +26,41 @@ if ($patient) {
     $dStmt = $db->prepare("SELECT * FROM vaccines WHERE patient_id = :pid ORDER BY dose_number ASC");
     $dStmt->execute([':pid' => $patient['id']]);
     $doses = $dStmt->fetchAll();
+}
+
+// ---- Slot availability for Day 0 ----
+$slotPreview = [];
+if ($patient && empty($doses)) {
+    for ($i = 0; $i <= 6; $i++) {
+        $d = date('Y-m-d', strtotime("+$i days"));
+        
+        // Fetch cap
+        $capStmt = $db->prepare("SELECT max_slots FROM daily_cap WHERE cap_date = :d");
+        $capStmt->execute([':d' => $d]);
+        $cap = $capStmt->fetch();
+        $maxSlots = $cap ? (int)$cap['max_slots'] : 100;
+        
+        // Fetch scheduled appointments
+        $cntAppt = $db->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date = :d AND status = 'scheduled'");
+        $cntAppt->execute([':d' => $d]);
+        $bookedAppt = (int)$cntAppt->fetchColumn();
+        
+        // Fetch today's queued patients if $d is today
+        $bookedQueue = 0;
+        if ($d === date('Y-m-d')) {
+            $cntQ = $db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at) = CURDATE() AND status != 'no_show'")->fetchColumn();
+            $bookedQueue = (int)$cntQ;
+        }
+        
+        $booked = $bookedAppt + $bookedQueue;
+        $available = max(0, $maxSlots - $booked);
+        $slotPreview[$d] = [
+            'max' => $maxSlots,
+            'booked' => $booked,
+            'available' => $available,
+            'full' => ($available <= 0)
+        ];
+    }
 }
 
 // ---- Triage form submission ----
@@ -61,37 +96,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_triage'])) {
             ':cat'   => $category,
             ':rem'   => $remarks,
         ]);
-        $newPatientId = (int)$db->lastInsertId();
-
-        // Create vaccine schedule (Day 0, 3, 7, 14, 28)
-        $doseDays = [0 => 1, 3 => 2, 7 => 3, 14 => 4, 28 => 5];
-        foreach ($doseDays as $day => $doseNum) {
-            $schedDate = date('Y-m-d', strtotime($biteDate . " +$day days"));
-            $db->prepare("
-                INSERT INTO vaccines (patient_id, dose_number, dose_day, scheduled_date, status)
-                VALUES (:pid, :dn, :dd, :sd, 'scheduled')
-            ")->execute([
-                ':pid' => $newPatientId,
-                ':dn'  => $doseNum,
-                ':dd'  => $day,
-                ':sd'  => $schedDate,
-            ]);
-        }
-
-        // Add to queue
-        $qCount = $db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at) = CURDATE()")->fetchColumn();
-        $qNum   = 'Q-' . str_pad((int)$qCount + 1, 3, '0', STR_PAD_LEFT);
-        $db->prepare("
-            INSERT INTO queue (patient_id, queue_number, status, purpose)
-            VALUES (:pid, :qnum, 'waiting', 'first_evaluation')
-        ")->execute([':pid' => $newPatientId, ':qnum' => $qNum]);
-
-        // Update session code
         $_SESSION['patient_code'] = $pCode;
-        $triageSuccess = "Registered successfully! Queue #$qNum assigned. Please proceed to the clinic.";
+        
+        redirect(APP_BASE . '/patient/dashboard.php?registered_triage=1');
+    }
+}
 
-        // Reload page to show updated data
-        redirect(APP_BASE . '/patient/dashboard.php?registered=1');
+// ---- Schedule first dose submission ----
+$scheduleError = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_schedule'])) {
+    $firstDoseDate = $_POST['first_dose_date'] ?? date('Y-m-d');
+    
+    // Check validation of selected date slot
+    if ($firstDoseDate < date('Y-m-d')) {
+        $scheduleError = 'First dose schedule cannot be in the past.';
+    } else {
+        if (!isset($slotPreview[$firstDoseDate])) {
+            $capStmt = $db->prepare("SELECT max_slots FROM daily_cap WHERE cap_date = :d");
+            $capStmt->execute([':d' => $firstDoseDate]);
+            $cap = $capStmt->fetch();
+            $maxSlots = $cap ? (int)$cap['max_slots'] : 100;
+            
+            $cntAppt = $db->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date = :d AND status = 'scheduled'");
+            $cntAppt->execute([':d' => $firstDoseDate]);
+            $bookedAppt = (int)$cntAppt->fetchColumn();
+            
+            $bookedQueue = 0;
+            if ($firstDoseDate === date('Y-m-d')) {
+                $cntQ = $db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at) = CURDATE() AND status != 'no_show'")->fetchColumn();
+                $bookedQueue = (int)$cntQ;
+            }
+            $booked = $bookedAppt + $bookedQueue;
+            $isFull = ($booked >= $maxSlots);
+        } else {
+            $isFull = $slotPreview[$firstDoseDate]['full'];
+        }
+        
+        if ($isFull) {
+            $scheduleError = 'Sorry, the selected date is fully booked. Please choose a different date.';
+        } elseif ($patient) {
+            $patientId = $patient['id'];
+            $pCode     = $patient['patient_code'];
+            
+            // Create vaccine schedule (Day 0, 3, 7, 14, 28)
+            $doseDays = [0 => 1, 3 => 2, 7 => 3, 14 => 4, 28 => 5];
+            foreach ($doseDays as $day => $doseNum) {
+                $schedDate = date('Y-m-d', strtotime($firstDoseDate . " +$day days"));
+                $db->prepare("
+                    INSERT INTO vaccines (patient_id, dose_number, dose_day, scheduled_date, status)
+                    VALUES (:pid, :dn, :dd, :sd, 'scheduled')
+                ")->execute([
+                    ':pid' => $patientId,
+                    ':dn'  => $doseNum,
+                    ':dd'  => $day,
+                    ':sd'  => $schedDate,
+                ]);
+            }
+
+            // Add to queue or schedule appointment
+            $today = date('Y-m-d');
+            if ($firstDoseDate === $today) {
+                $qCount = $db->query("SELECT COUNT(*) FROM queue WHERE DATE(queued_at) = CURDATE()")->fetchColumn();
+                $qNum   = 'Q-' . str_pad((int)$qCount + 1, 3, '0', STR_PAD_LEFT);
+                $db->prepare("
+                    INSERT INTO queue (patient_id, queue_number, status, purpose)
+                    VALUES (:pid, :qnum, 'waiting', 'first_evaluation')
+                ")->execute([':pid' => $patientId, ':qnum' => $qNum]);
+
+                redirect(APP_BASE . '/patient/dashboard.php?registered=1');
+            } else {
+                $qrToken = bin2hex(random_bytes(32));
+                $db->prepare("
+                    INSERT INTO appointments (patient_id, appointment_type, dose_day, appointment_date, status, qr_token)
+                    VALUES (:pid, 'first_evaluation', 0, :date, 'scheduled', :token)
+                ")->execute([
+                    ':pid'   => $patientId,
+                    ':date'  => $firstDoseDate,
+                    ':token' => $qrToken,
+                ]);
+
+                redirect(APP_BASE . '/patient/dashboard.php?scheduled_appt=' . urlencode($firstDoseDate));
+            }
+        }
     }
 }
 
@@ -101,7 +187,15 @@ $completedDoses= count(array_filter($doses, fn($d) => $d['status'] === 'administ
 $progressPct   = $totalDoses > 0 ? ($completedDoses / $totalDoses) * 80 : 0; // 80% = span of bar
 
 // Flash messages
-$regFlash = isset($_GET['registered']) ? 'Triage submitted! You\'ve been added to today\'s queue.' : '';
+$regFlash = '';
+if (isset($_GET['registered_triage'])) {
+    $regFlash = 'Bite incident report submitted successfully! Please select your first dose (Day 0) schedule below.';
+} elseif (isset($_GET['registered'])) {
+    $regFlash = 'First dose schedule confirmed! You have been added to today\'s queue. Please proceed to the clinic.';
+} elseif (isset($_GET['scheduled_appt'])) {
+    $dateStr = date('F j, Y', strtotime($_GET['scheduled_appt']));
+    $regFlash = "First dose schedule confirmed! Your Day 0 appointment is scheduled for " . $dateStr . ". Go to 'My Pass' on that day.";
+}
 
 $page_title = 'Home';
 $active_nav = 'home';
@@ -163,6 +257,53 @@ include __DIR__ . '/../includes/header_patient.php';
     <?php endif; ?>
   </div>
 </section>
+<?php elseif ($patient && empty($doses)): ?>
+<section class="animate-fade-in stagger-1">
+  <div class="card" style="padding:var(--space-lg);margin-bottom:var(--space-md);background:var(--surface-container);border:1px solid var(--border);border-radius:16px">
+    <div style="display:flex;align-items:center;gap:var(--space-sm);color:var(--primary);margin-bottom:var(--space-md)">
+      <span class="material-symbols-outlined icon-filled" style="font-size:32px">calendar_month</span>
+      <h2 style="font-size:20px;font-weight:800">Schedule Your First Dose (Day 0)</h2>
+    </div>
+    <p style="color:var(--on-surface-variant);font-size:14px;line-height:1.5;margin-bottom:var(--space-md)">
+      Your bite incident report has been submitted successfully (Patient ID: <strong style="color:var(--primary)">#<?= htmlspecialchars($patient['patient_code']) ?></strong>). 
+      <br><br>
+      To complete your registration, select the date you plan to visit the clinic to get evaluated and receive your first vaccine shot. All subsequent doses (Day 3, 7, 14, 28) will be calculated and scheduled from this date.
+    </p>
+
+    <?php if ($scheduleError): ?>
+    <div class="alert alert-error" style="margin-bottom:var(--space-md)">
+      <span class="material-symbols-outlined" style="color:var(--error)">error</span>
+      <span><?= htmlspecialchars($scheduleError) ?></span>
+    </div>
+    <?php endif; ?>
+    
+    <form method="POST" action="" style="display:flex;flex-direction:column;gap:var(--space-md)">
+      <input type="hidden" name="submit_schedule" value="1" />
+      <div class="form-group">
+        <label class="form-label" for="first_dose_date">First Dose Date (Day 0) <span style="color:var(--error)">*</span></label>
+        <select class="form-select" id="first_dose_date" name="first_dose_date" required>
+          <?php foreach ($slotPreview as $dateVal => $info):
+            $formattedDate = date('l, M j', strtotime($dateVal));
+            $slotsText = $info['full'] ? 'Fully Booked' : $info['available'] . ' slots available';
+            $disabled = $info['full'] ? 'disabled style="color:var(--on-surface-variant); opacity:0.6;"' : '';
+          ?>
+            <option value="<?= $dateVal ?>" <?= $disabled ?>>
+              <?= $formattedDate ?> — <?= $slotsText ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      
+      <button type="submit" class="booking-btn booking-btn--primary" style="margin-top:var(--space-sm)">
+        <div class="booking-btn__left">
+          <span class="material-symbols-outlined booking-btn__icon icon-filled">event_available</span>
+          <span class="booking-btn__text">Confirm Schedule</span>
+        </div>
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </form>
+  </div>
+</section>
 <?php else: ?>
 <!-- No active record — show welcome -->
 <div class="card animate-fade-in stagger-1" style="text-align:center;padding:var(--space-xl)">
@@ -213,6 +354,7 @@ include __DIR__ . '/../includes/header_patient.php';
             </select>
           </div>
         </div>
+
       </div>
       <div class="form-group">
         <label class="form-label" for="body_location">Location on Body <span style="color:var(--error)">*</span></label>

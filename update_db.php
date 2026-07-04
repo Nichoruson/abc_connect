@@ -318,6 +318,7 @@ if ($db && ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['auto']))) {
                 }
             }
         }
+    }
         
         // Re-enable FK checks
         $db->exec("SET FOREIGN_KEY_CHECKS = 1");

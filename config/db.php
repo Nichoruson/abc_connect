@@ -1,8 +1,11 @@
 <?php
+// Set timezone globally to Philippine Time (PST)
+date_default_timezone_set('Asia/Manila');
+
 // Error reporting — show only fatal errors on screen; log everything else.
 // Deprecation notices from third-party libraries (phpqrcode) are suppressed from display.
-ini_set('display_errors', 0);
-ini_set('display_startup_errors', 0);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 // ============================================================
@@ -28,7 +31,7 @@ if ($isLocalhost) {
     
     // IMPORTANT: Make sure to check these in your InfinityFree Client Area -> MySQL Databases!
     define('DB_HOST', 'sql105.infinityfree.com'); // E.g., sql123.infinityfree.com
-    define('DB_NAME', 'if0_42170880_rabies_shield'); // E.g., if0_42170880_xxxx
+    define('DB_NAME', 'if0_42170880_abc_connect'); // E.g., if0_42170880_xxxx
     define('DB_USER', 'if0_42170880');           // Your InfinityFree username
     define('DB_PASS', 'Cw88NcjNSKVKu');          // Your InfinityFree MySQL password
 }
@@ -45,6 +48,11 @@ function getDB(): PDO {
         ];
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            try {
+                $pdo->exec("SET time_zone = '+08:00'");
+            } catch (Exception $e) {
+                // Fail silently if setting session timezone is restricted by the hosting provider
+            }
             
             // Auto-initialize tables if 'admins' table doesn't exist
             $check = $pdo->query("SHOW TABLES LIKE 'admins'");

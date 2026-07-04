@@ -31,15 +31,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qr_token'])) {
     $stmt->execute([':token' => $token]);
     $appt = $stmt->fetch();
 
+    $currentTime = date('H:i');
     if (!$appt) {
         $verifyResult = ['status' => 'invalid', 'message' => 'QR code not found. This pass is not valid.'];
+    } elseif ($appt['appointment_date'] !== date('Y-m-d')) {
+        $verifyResult = ['status' => 'wrong_date', 'appt' => $appt,
+            'message' => 'This pass is for ' . date('F j, Y', strtotime($appt['appointment_date'])) . ', not today.'];
+    } elseif ($currentTime < '08:00' || $currentTime > '18:30') {
+        $verifyResult = ['status' => 'wrong_time', 'appt' => $appt,
+            'message' => 'Clinic scanning hours are from 8:00 AM to 6:30 PM. Currently: ' . date('h:i A') . '.'];
     } elseif ($appt['status'] === 'completed') {
         $verifyResult = ['status' => 'used', 'appt' => $appt, 'message' => 'This pass has already been used (appointment completed).'];
     } elseif ($appt['status'] === 'cancelled') {
         $verifyResult = ['status' => 'cancelled', 'appt' => $appt, 'message' => 'This appointment has been cancelled.'];
-    } elseif ($appt['appointment_date'] !== date('Y-m-d')) {
-        $verifyResult = ['status' => 'wrong_date', 'appt' => $appt,
-            'message' => 'This pass is for ' . date('F j, Y', strtotime($appt['appointment_date'])) . ', not today.'];
     } else {
         $verifyResult = ['status' => 'valid', 'appt' => $appt, 'message' => 'Valid! Patient is admitted.'];
     }
@@ -125,13 +129,13 @@ include __DIR__ . '/../includes/header_admin.php';
       $cardClass = match($verifyResult['status']) {
         'valid', 'admitted' => 'verify-card--valid',
         'invalid'           => 'verify-card--invalid',
-        'wrong_date'        => 'verify-card--wrong',
+        'wrong_date', 'wrong_time' => 'verify-card--wrong',
         default             => 'verify-card--used',
       };
       $icon = match($verifyResult['status']) {
         'valid', 'admitted' => 'check_circle',
         'invalid'           => 'cancel',
-        'wrong_date'        => 'event_busy',
+        'wrong_date', 'wrong_time' => 'event_busy',
         default             => 'info',
       };
     ?>
